@@ -1,11 +1,12 @@
 from lib.db.connection import get_connection
-from lib.models.magazine import Magazine
-
 
 class Author:
     def __init__(self, name, id=None):
+        if not name or not isinstance(name, str):
+            raise ValueError("Name must be a non-empty string.")
         self.id = id
         self.name = name
+
 
     def __repr__(self):
         return f"<Author {self.id}: {self.name}>"
@@ -71,6 +72,7 @@ class Author:
             ]
 
     def magazines(self):
+        from lib.models.magazine import Magazine
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""

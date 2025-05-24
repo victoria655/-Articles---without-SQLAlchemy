@@ -9,14 +9,19 @@ class Magazine:
     def __repr__(self):
         return f"<Magazine {self.id}: {self.name} ({self.category})>"
 
-
     def save(self):
         with get_connection() as conn:
             cursor = conn.cursor()
             if self.id:
-                cursor.execute("UPDATE magazines SET name = ?, category = ? WHERE id = ?", (self.name, self.category, self.id))
+                cursor.execute(
+                    "UPDATE magazines SET name = ?, category = ? WHERE id = ?",
+                    (self.name, self.category, self.id)
+                )
             else:
-                cursor.execute("INSERT INTO magazines (name, category) VALUES (?, ?)", (self.name, self.category))
+                cursor.execute(
+                    "INSERT INTO magazines (name, category) VALUES (?, ?)",
+                    (self.name, self.category)
+                )
                 self.id = cursor.lastrowid
 
     @classmethod
@@ -45,7 +50,15 @@ class Magazine:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM articles WHERE magazine_id = ?", (self.id,))
             rows = cursor.fetchall()
-            return [Article(id=row['id'], title=row['title'], author_id=row['author_id'], magazine_id=row['magazine_id']) for row in rows]
+            return [
+                Article(
+                    id=row['id'],
+                    title=row['title'],
+                    author_id=row['author_id'],
+                    magazine_id=row['magazine_id']
+                )
+                for row in rows
+            ]
 
     def contributors(self):
         with get_connection() as conn:
@@ -55,7 +68,15 @@ class Magazine:
                 JOIN articles ar ON au.id = ar.author_id
                 WHERE ar.magazine_id = ?
             """, (self.id,))
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+            from lib.models.author import Author
+            return [
+                Author(
+                    id=row['id'],
+                    name=row['name']
+                )
+                for row in rows
+            ]
 
     def article_titles(self):
         with get_connection() as conn:

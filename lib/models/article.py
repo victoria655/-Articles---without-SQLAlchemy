@@ -2,11 +2,12 @@ from lib.db.connection import get_connection
 
 class Article:
     def __init__(self, title, author_id, magazine_id, id=None):
+        if not title or not isinstance(title, str):
+            raise ValueError("Title must be a non-empty string.")
         self.id = id
         self.title = title
         self.author_id = author_id
         self.magazine_id = magazine_id
-    
 
     def __repr__(self):
         return f"<Article {self.id}: {self.title}>"
@@ -15,9 +16,15 @@ class Article:
         with get_connection() as conn:
             cursor = conn.cursor()
             if self.id:
-                cursor.execute("UPDATE articles SET title = ?, author_id = ?, magazine_id = ? WHERE id = ?", (self.title, self.author_id, self.magazine_id, self.id))
+                cursor.execute(
+                    "UPDATE articles SET title = ?, author_id = ?, magazine_id = ? WHERE id = ?",
+                    (self.title, self.author_id, self.magazine_id, self.id)
+                )
             else:
-                cursor.execute("INSERT INTO articles (title, author_id, magazine_id) VALUES (?, ?, ?)", (self.title, self.author_id, self.magazine_id))
+                cursor.execute(
+                    "INSERT INTO articles (title, author_id, magazine_id) VALUES (?, ?, ?)",
+                    (self.title, self.author_id, self.magazine_id)
+                )
                 self.id = cursor.lastrowid
 
     @classmethod
@@ -27,5 +34,10 @@ class Article:
             cursor.execute("SELECT * FROM articles WHERE id = ?", (article_id,))
             row = cursor.fetchone()
             if row:
-                return cls(id=row['id'], title=row['title'], author_id=row['author_id'], magazine_id=row['magazine_id'])
+                return cls(
+                    id=row['id'],
+                    title=row['title'],
+                    author_id=row['author_id'],
+                    magazine_id=row['magazine_id']
+                )
             return None
