@@ -5,7 +5,7 @@ class Magazine:
         self.id = id
         self.name = name
         self.category = category
-    
+
     def __repr__(self):
         return f"<Magazine {self.id}: {self.name} ({self.category})>"
 
@@ -23,6 +23,7 @@ class Magazine:
                     (self.name, self.category)
                 )
                 self.id = cursor.lastrowid
+            conn.commit()  # Ensure changes are saved
 
     @classmethod
     def find_by_id(cls, mag_id):
@@ -83,3 +84,35 @@ class Magazine:
             cursor = conn.cursor()
             cursor.execute("SELECT title FROM articles WHERE magazine_id = ?", (self.id,))
             return [row['title'] for row in cursor.fetchall()]
+
+    @classmethod
+    def top_publisher(cls):
+        sql = """
+            SELECT magazine_id, COUNT(*) as article_count
+            FROM articles
+            GROUP BY magazine_id
+            ORDER BY article_count DESC
+            LIMIT 1
+        """
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql)
+            result = cursor.fetchone()
+            if result:
+                return cls.find_by_id(result["magazine_id"])
+            return None
+    
+    @classmethod
+    def all(cls):
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM magazines")
+            rows = cursor.fetchall()
+            return [
+                cls(
+                    id=row['id'],
+                    name=row['name'],
+                    category=row['category']
+                )
+                for row in rows
+            ]
